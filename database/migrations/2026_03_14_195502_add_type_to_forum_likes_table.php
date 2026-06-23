@@ -9,30 +9,29 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('forum_likes', function (Blueprint $table) {
-            // Hapus unique constraint lama jika ada
-            try {
-                $table->dropUnique(['user_id', 'likeable_id', 'likeable_type']);
-            } catch (\Exception $e) {
-                // Abaikan jika constraint tidak ditemukan
-            }
+            // FK on user_id uses the composite unique index; drop FK before dropping the index
+            $table->dropForeign(['user_id']);
+            $table->dropUnique(['user_id', 'likeable_id', 'likeable_type']);
 
-            // Tambah kolom type
             $table->enum('type', ['like', 'dislike'])->default('like')->after('likeable_type');
 
-            // Tambah unique constraint baru yang menyertakan type
-            // Sehingga 1 user bisa punya 1 like DAN 1 dislike pada entitas yang sama
-            // tapi tidak bisa 2 like atau 2 dislike
+            // 1 user can have 1 like AND 1 dislike on the same entity, but not duplicates
             $table->unique(['user_id', 'likeable_id', 'likeable_type', 'type'], 'forum_likes_unique');
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
     public function down(): void
     {
         Schema::table('forum_likes', function (Blueprint $table) {
+            $table->dropForeign(['user_id']);
             $table->dropUnique('forum_likes_unique');
             $table->dropColumn('type');
 
             $table->unique(['user_id', 'likeable_id', 'likeable_type']);
+
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 };

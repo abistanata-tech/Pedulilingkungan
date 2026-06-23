@@ -13,7 +13,7 @@ nixPkgs = [
 
 [phases.install]
 cmds = [
-    "composer install --no-dev --optimize-autoloader",
+    "APP_URL=http://localhost COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --optimize-autoloader",
     "npm ci"
 ]
 

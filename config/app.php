@@ -52,7 +52,19 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    'url' => (static function (): string {
+        $url = trim((string) env('APP_URL', 'http://localhost'));
+
+        if ($url === '' || parse_url($url) === false) {
+            return 'http://localhost';
+        }
+
+        if (parse_url($url, PHP_URL_SCHEME) === null) {
+            $url = 'https://'.ltrim($url, '/');
+        }
+
+        return parse_url($url) === false ? 'http://localhost' : $url;
+    })(),
 
     /*
     |--------------------------------------------------------------------------
